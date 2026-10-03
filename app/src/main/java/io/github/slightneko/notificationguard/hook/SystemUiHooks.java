@@ -33,6 +33,7 @@ final class SystemUiHooks {
     private final AtomicLong revision = new AtomicLong();
     private final Handler main = new Handler(Looper.getMainLooper());
     private boolean menuReady, iconsReady;
+    private int dialogWindowType;
     SystemUiHooks(GuardModule module, ClassLoader loader) { this.module = module; this.loader = loader; }
     void install() throws Exception {
         try { trackEntries(); installIcons(); iconsReady = true; } catch (Throwable e) { module.error("Status bar channel filter unavailable",e); }
@@ -113,6 +114,7 @@ final class SystemUiHooks {
         for (Object state : revisions) try { Reflect.call(state,"setValue",value); } catch (Exception e) { module.error("Icon refresh unavailable",e); }
     }
     private void installMenu() throws Exception {
+        dialogWindowType = Reflect.field(WindowManager.LayoutParams.class,"TYPE_STATUS_BAR_SUB_PANEL").getInt(null);
         Class<?> menu = loader.loadClass("com.android.systemui.statusbar.notification.row.MiuiNotificationMenuRow");
         Class<?> item = loader.loadClass("com.android.systemui.statusbar.notification.row.MiuiNotificationMenuRow$MiuiNotificationMenuItem");
         Constructor<?> ctor = null;
@@ -167,6 +169,6 @@ final class SystemUiHooks {
                 .setNegativeButton("取消",null)
                 .setPositiveButton("应用",(d,which) -> b.writeRule(key,selected[0],selected[1],() -> main.post(() -> Toast.makeText(context,"渠道规则已更新",Toast.LENGTH_SHORT).show())))
                 .create();
-        dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_STATUS_BAR_SUB_PANEL); dialog.show();
+        dialog.getWindow().setType(dialogWindowType); dialog.show();
     }
 }

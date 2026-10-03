@@ -122,9 +122,9 @@ class MainActivity : ComponentActivity() {
                         Segments(listOf("今日","7 天","30 天","累计"),listOf(1,7,30,0).indexOf(days)) { days = listOf(1,7,30,0)[it] }
                         val rows = snapshot.stats.filter { appPkg == null || (it.pkg == appPkg && it.user == appUser) }
                         Row(Modifier.fillMaxWidth().padding(20.dp),horizontalArrangement = Arrangement.SpaceBetween) {
-                            Counter("发送尝试",rows.sumOf { it.attempts },Color(0xFF16866D))
-                            Counter("拦截",rows.sumOf { it.blocked },Color(0xFFCF5F51))
-                            Counter("更新",rows.sumOf { it.updates },Color(0xFF687CC2))
+                            Counter("发送尝试",rows.sumOf { it.attempts },Color(0xFF16866D),Modifier.weight(1f))
+                            Counter("拦截",rows.sumOf { it.blocked },Color(0xFFCF5F51),Modifier.weight(1f))
+                            Counter("更新",rows.sumOf { it.updates },Color(0xFF687CC2),Modifier.weight(1f))
                         }
                         if (loading) EmptyView("加载中")
                         else if (rows.isEmpty()) EmptyView(if (systemOnline) "暂无记录" else "系统服务未连接")
@@ -202,8 +202,11 @@ class MainActivity : ComponentActivity() {
             DividerLine()
         }
     }
-    @Composable private fun Counter(label: String,value: Long,color: Color) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { Text(value.toString(),fontSize = 26.sp,fontWeight = FontWeight.SemiBold,color = color); Text(label,fontSize = 12.sp,color = MiuixTheme.colorScheme.onSurfaceVariantSummary) }
+    @Composable private fun Counter(label: String,value: Long,color: Color,modifier: Modifier) {
+        Column(modifier,verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(value.toString(),modifier = Modifier.fillMaxWidth(),maxLines = 1,autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 8.sp,maxFontSize = 26.sp),fontWeight = FontWeight.SemiBold,color = color)
+            Text(label,fontSize = 12.sp,color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+        }
     }
     @Composable private fun StatusLine(label: String,online: Boolean) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceBetween) { Text(label); Text(if (online) "已连接" else "未连接",color = if (online) Color(0xFF16866D) else Color(0xFFCF5F51)) }

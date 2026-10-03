@@ -21,8 +21,8 @@ final class Reflect {
                 if (!m.getName().equals(name) || m.getParameterCount() != args.length) continue;
                 Class<?>[] p = m.getParameterTypes(); boolean matches = true;
                 for (int i = 0; i < p.length; i++) {
-                    Class<?> type = p[i].isPrimitive() ? boxed(p[i]) : p[i];
-                    if (args[i] != null && !type.isInstance(args[i])) { matches = false; break; }
+                    Class<?> parameterType = p[i].isPrimitive() ? boxed(p[i]) : p[i];
+                    if (args[i] != null && !parameterType.isInstance(args[i])) { matches = false; break; }
                 }
                 if (!matches) continue;
                 m.setAccessible(true);
