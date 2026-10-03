@@ -1,0 +1,12 @@
+.gradle/
+.kotlin/
+**/build/
+local.properties
+signing/
+*.jks
+*.keystore
+*.apk
+*.jar
+*.dex
+*.log
+!gradle/wrapper/gradle-wrapper.jar
