@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">通知管家</string>
+    <string name="app_description">按通知渠道拦截并统计通知，独立隐藏状态栏图标</string>
+</resources>
