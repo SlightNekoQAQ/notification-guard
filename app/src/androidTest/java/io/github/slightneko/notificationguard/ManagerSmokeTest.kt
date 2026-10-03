@@ -27,7 +27,7 @@ class ManagerSmokeTest {
         android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
     }
     @Before fun prepare() {
-        assertTrue("Synthetic-data tests are emulator-only",Build.FINGERPRINT.contains("generic") || Build.MODEL.contains("sdk"))
+        assertTrue("Synthetic-data tests are emulator-only",Build.HARDWARE in setOf("ranchu","goldfish") || Build.FINGERPRINT.contains("generic") || Build.FINGERPRINT.contains("sdk_gphone"))
         context.contentResolver.call(GuardProvider.URI,"rules",null,null)
         val protected = context.createDeviceProtectedStorageContext()
         protected.getSharedPreferences("ui",Context.MODE_PRIVATE).edit().putBoolean("onboarded",true).commit()

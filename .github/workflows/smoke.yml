@@ -31,11 +31,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: |
-            gradle --no-daemon connectedDebugAndroidTest
-      - name: Collect screenshots
-        if: always()
-        run: adb pull /sdcard/Android/data/io.github.slightneko.notificationguard/files/screenshots screenshots || true
+          script: bash ci/emulator-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
