@@ -4,6 +4,8 @@
 
 当前是首个实验版本。构建通过不等于实机 Hook 已验证；系统更新后需要重新验证适配。
 
+[下载 0.1.0-alpha APK](https://github.com/SlightNekoQAQ/notification-guard/releases/download/v0.1.0-alpha/NotificationGuard-0.1.0-alpha.apk) · [发布说明](https://github.com/SlightNekoQAQ/notification-guard/releases/tag/v0.1.0-alpha)
+
 ## 功能
 
 - 按用户空间、应用、通知渠道设置拦截规则。
@@ -63,4 +65,15 @@ GitHub Actions 使用 JDK 17、Gradle 8.13、Android SDK 36、Kotlin 2.3.20 和 
 - 一键开启、失败报告与备份恢复；进程中断后不自动续执行危险任务。
 - 普通 App 调用 Provider 被拒绝；数据库和日志不包含通知正文。
 
-以上实机验收尚未完成。请在主力机启用系统作用域前保留 LSPosed 的禁用/救援方式。
+以上实际 LSPosed 系统作用域验收尚未完成。请在主力机启用系统作用域前保留 LSPosed 的禁用/救援方式。
+
+## 已完成的 CI 验证
+
+- 单元测试 4 / 4：应用与渠道统计聚合、用户隔离、渠道身份、API 102 与作用域配置。
+- 模拟器测试 4 / 4：渠道开关写入、普通 Shell 调用被拒绝、不保存正文的数据库结构、离线引导页禁止批量开启。
+- 手机窄屏、深色模式、大屏、渠道、设置与引导页截图检查，使用合成数据。
+- Lint 与裁剪后的签名 Release APK 构建通过，APK 约 2.1 MB，v2 签名有效。
+
+[构建结果](https://github.com/SlightNekoQAQ/notification-guard/actions/runs/37145997411) · [模拟器结果](https://github.com/SlightNekoQAQ/notification-guard/actions/runs/37146009962)
+
+界面预览：[排行](https://github.com/SlightNekoQAQ/notification-guard/releases/download/v0.1.0-alpha/phone-ranking.png) · [渠道](https://github.com/SlightNekoQAQ/notification-guard/releases/download/v0.1.0-alpha/phone-channels.png) · [设置](https://github.com/SlightNekoQAQ/notification-guard/releases/download/v0.1.0-alpha/phone-settings.png) · [引导](https://github.com/SlightNekoQAQ/notification-guard/releases/download/v0.1.0-alpha/phone-onboarding.png)
