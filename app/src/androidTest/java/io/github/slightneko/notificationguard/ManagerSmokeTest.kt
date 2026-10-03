@@ -47,6 +47,8 @@ class ManagerSmokeTest {
         shell("wm size reset"); shell("wm density reset"); shell("cmd uimode night no")
     }
     private fun screenshot(name: String) {
+        compose.waitForIdle()
+        android.os.SystemClock.sleep(1200)
         instrument.waitForIdleSync()
         val screenshot = instrument.uiAutomation.takeScreenshot()
         assertNotNull(screenshot)
@@ -81,6 +83,16 @@ class ManagerSmokeTest {
         shell("wm size 1600x2560"); shell("wm density 240")
         ActivityScenario.launch(MainActivity::class.java).use { waitFor("演示应用"); screenshot("tablet-ranking") }
         shell("wm size reset"); shell("wm density reset"); shell("cmd uimode night no")
+    }
+    @Test fun onboardingDoesNotEnableNotificationsWithoutSystemConnection() {
+        context.createDeviceProtectedStorageContext().getSharedPreferences("ui",Context.MODE_PRIVATE).edit().putBoolean("onboarded",false).commit()
+        ActivityScenario.launch(MainActivity::class.java).use {
+            waitFor("进入")
+            compose.onNodeWithText("一键开启全部通知").assertIsNotEnabled()
+            screenshot("phone-onboarding")
+            compose.onNodeWithText("进入").performClick()
+            waitFor("演示应用")
+        }
     }
     @Test fun ordinaryShellCallerCannotReadOrMutateBridge() {
         val read = shell("content query --uri content://${GuardProvider.AUTHORITY}/state")
