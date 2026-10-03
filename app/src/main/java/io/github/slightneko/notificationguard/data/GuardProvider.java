@@ -25,6 +25,7 @@ public final class GuardProvider extends ContentProvider {
                 d.execSQL("CREATE TABLE rules(user INTEGER,pkg TEXT,channel TEXT,blocked INTEGER NOT NULL,hidden INTEGER NOT NULL,PRIMARY KEY(user,pkg,channel))");
                 d.execSQL("CREATE TABLE channels(user INTEGER,pkg TEXT,channel TEXT,label TEXT,app TEXT,importance INTEGER,enabled INTEGER,PRIMARY KEY(user,pkg,channel))");
                 d.execSQL("CREATE TABLE stats(day TEXT,user INTEGER,pkg TEXT,channel TEXT,attempts INTEGER NOT NULL,blocked INTEGER NOT NULL,updates INTEGER NOT NULL,PRIMARY KEY(day,user,pkg,channel))");
+                d.execSQL("CREATE TABLE batches(id TEXT PRIMARY KEY,created INTEGER)");
                 d.execSQL("CREATE TABLE state(key TEXT PRIMARY KEY,value TEXT)");
                 d.execSQL("CREATE TABLE jobs(id INTEGER PRIMARY KEY AUTOINCREMENT,action TEXT,status TEXT,detail TEXT,created INTEGER)");
                 d.execSQL("CREATE TABLE backup(user INTEGER,pkg TEXT,payload TEXT,PRIMARY KEY(user,pkg))");
@@ -82,6 +83,9 @@ public final class GuardProvider extends ContentProvider {
                 }
                 case "stats": {
                     system(); JSONArray a = new JSONArray(b.getString("json", "[]"));
+                    String batch = b.getString("batch");
+                    if (batch == null || batch.length() > 100) throw new IllegalArgumentException("Missing batch ID");
+                    try (Cursor c = db.rawQuery("SELECT 1 FROM batches WHERE id=?", new String[]{batch})) { if (c.moveToFirst()) return Bundle.EMPTY; }
                     db.beginTransaction();
                     try {
                         for (int i = 0; i < a.length(); i++) {
@@ -90,6 +94,8 @@ public final class GuardProvider extends ContentProvider {
                             db.execSQL("INSERT OR IGNORE INTO stats VALUES(?,?,?,?,0,0,0)", ids);
                             db.execSQL("UPDATE stats SET attempts=attempts+?,blocked=blocked+?,updates=updates+? WHERE day=? AND user=? AND pkg=? AND channel=?", new Object[]{r.getInt("attempts"),r.getInt("blocked"),r.getInt("updates"),ids[0],ids[1],ids[2],ids[3]});
                         }
+                        db.execSQL("INSERT INTO batches VALUES(?,?)", new Object[]{batch,System.currentTimeMillis()});
+                        db.delete("batches", "created<?", new String[]{Long.toString(System.currentTimeMillis() - 86400000L)});
                         db.setTransactionSuccessful();
                     } finally { db.endTransaction(); }
                     return Bundle.EMPTY;

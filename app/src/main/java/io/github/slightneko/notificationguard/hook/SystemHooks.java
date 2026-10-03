@@ -21,6 +21,7 @@ final class SystemHooks {
     private final ThreadLocal<Attempt> current = new ThreadLocal<>();
     private final Map<DailyKey, Counts> pending = new HashMap<>();
     private String detail = "";
+    private final java.util.ArrayDeque<Bundle> batches = new java.util.ArrayDeque<>();
     private record DailyKey(String day, ChannelKey key) { }
     private static final class Counts { int attempts, blocked, updates; }
     private static final class Attempt {
@@ -90,23 +91,22 @@ final class SystemHooks {
         }
     }
     private void flush() throws Exception {
-        // Hold only the metadata counter lock; no Android notification lock is held during IPC.
-        Map<DailyKey, Counts> batch;
-        synchronized (pending) { batch = new HashMap<>(pending); pending.clear(); }
-        if (batch.isEmpty()) return;
-        try {
+        // Retry an immutable batch ID so a committed transaction cannot be counted twice.
+        if (batches.isEmpty()) {
+            Map<DailyKey, Counts> batch;
+            synchronized (pending) { batch = new HashMap<>(pending); pending.clear(); }
             JSONArray array = new JSONArray();
             for (Map.Entry<DailyKey, Counts> row : batch.entrySet()) {
                 DailyKey k = row.getKey(); Counts c = row.getValue();
                 array.put(new JSONObject().put("day",k.day()).put("user",k.key().user()).put("pkg",k.key().pkg()).put("channel",k.key().channel()).put("attempts",c.attempts).put("blocked",c.blocked).put("updates",c.updates));
+                if (array.length() == 50) { enqueueBatch(array); array = new JSONArray(); }
             }
-            Bundle b = new Bundle(); b.putString("json", array.toString()); bridge.call("stats", null, b);
-        } catch (Exception e) {
-            synchronized (pending) {
-                for (var row : batch.entrySet()) { Counts c = pending.computeIfAbsent(row.getKey(), k -> new Counts()); c.attempts += row.getValue().attempts; c.blocked += row.getValue().blocked; c.updates += row.getValue().updates; }
-            }
-            throw e;
+            if (array.length() > 0) enqueueBatch(array);
         }
+        while (!batches.isEmpty()) { bridge.call("stats", null, batches.peek()); batches.remove(); }
+    }
+    private void enqueueBatch(JSONArray array) {
+        Bundle b = new Bundle(); b.putString("json",array.toString()); b.putString("batch",java.util.UUID.randomUUID().toString()); batches.add(b);
     }
     private void tick() {
         try {
