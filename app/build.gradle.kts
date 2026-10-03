@@ -5,7 +5,7 @@ plugins {
 }
 android {
     namespace = "io.github.slightneko.notificationguard"
-    compileSdk = 37
+    compileSdk = 36
     defaultConfig {
         applicationId = "io.github.slightneko.notificationguard"
         minSdk = 31
@@ -34,11 +34,11 @@ android {
 }
 dependencies {
     compileOnly("io.github.libxposed:api:102.0.0")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    implementation("androidx.activity:activity-compose:1.12.4")
+    implementation(platform("androidx.compose:compose-bom:2026.03.00"))
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.4")
+    implementation("top.yukonga.miuix.kmp:miuix-android:0.8.8")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
 }

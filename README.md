@@ -44,7 +44,7 @@
 
 ## 构建
 
-GitHub Actions 使用 JDK 17、Gradle 8.13、Android SDK 37，运行单元测试、Lint 并构建签名 APK。下载 `NotificationGuard` artifact。
+GitHub Actions 使用 JDK 17、Gradle 8.13、Android SDK 36、Kotlin 2.3.20 和 Miuix 0.8.8，运行单元测试、Lint 并构建签名 APK。下载 `NotificationGuard` artifact。
 
 仓库 Secrets：
 
