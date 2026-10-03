@@ -18,6 +18,7 @@ final class SystemHooks {
     private final ClassLoader loader;
     private volatile Bridge bridge;
     private Object service;
+    private android.os.Handler tasks;
     private final ThreadLocal<Attempt> current = new ThreadLocal<>();
     private final Map<DailyKey, Counts> pending = new HashMap<>();
     private String detail = "";
@@ -74,6 +75,7 @@ final class SystemHooks {
             try {
                 Context context = (Context) Reflect.call(service, "getContext");
                 bridge = new Bridge(context, module);
+                android.os.HandlerThread taskThread = new android.os.HandlerThread("NotificationGuardTasks"); taskThread.start(); tasks = new android.os.Handler(taskThread.getLooper());
                 detail = "发送计数与渠道拦截 Hook 已安装";
                 bridge.onRulesChanged = this::cancelBlocked;
                 bridge.handler.postDelayed(() -> { try { bridge.call("recoverJob", null, null); } catch (Exception e) { module.error("Job recovery unavailable", e); } tick(); }, 15000);
@@ -112,7 +114,17 @@ final class SystemHooks {
         try {
             bridge.refreshRules(); flush(); bridge.heartbeat("system", detail);
             JSONArray jobs = bridge.array("takeJob", null);
-            if (jobs.length() != 0) new ChannelOperations(service, bridge).run(jobs.getJSONObject(0));
+            if (jobs.length() != 0) {
+                JSONObject job = jobs.getJSONObject(0);
+                tasks.post(() -> {
+                    try { new ChannelOperations(service, bridge).run(job); }
+                    catch (Exception e) {
+                        module.error("Channel task failed",e);
+                        Bundle result = new Bundle(); result.putLong("id",job.optLong("id")); result.putString("status","failed"); result.putString("detail","系统任务失败：" + e.getClass().getSimpleName());
+                        try { bridge.call("jobResult",null,result); } catch (Exception ignored) { }
+                    }
+                });
+            }
         } catch (Exception e) { module.error("System worker unavailable", e); }
         finally { bridge.handler.postDelayed(this::tick, 5000); }
     }

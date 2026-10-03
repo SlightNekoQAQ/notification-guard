@@ -226,7 +226,7 @@ class MainActivity : ComponentActivity() {
     @Composable private fun DividerLine() { Box(Modifier.fillMaxWidth().height(1.dp).background(MiuixTheme.colorScheme.onSurface.copy(alpha = 0.08f))) }
     @Composable private fun JobView(job: JobRow) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(when(job.action) { "enable" -> "开启全部通知"; "restore" -> "恢复通知设置"; else -> "刷新渠道" } + " · " + when(job.status) { "pending" -> "等待执行"; "running" -> "执行中"; "done" -> "完成"; "partial" -> "部分失败"; else -> "已中断" },fontSize = 14.sp,fontWeight = FontWeight.Medium)
+            Text(when(job.action) { "enable" -> "开启全部通知"; "restore" -> "恢复通知设置"; else -> "刷新渠道" } + " · " + when(job.status) { "pending" -> "等待执行"; "running" -> "执行中"; "done" -> "完成"; "partial" -> "部分失败"; "failed" -> "失败"; else -> "已中断" },fontSize = 14.sp,fontWeight = FontWeight.Medium)
             Text(job.detail,fontSize = 12.sp,color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
             DividerLine()
         }
