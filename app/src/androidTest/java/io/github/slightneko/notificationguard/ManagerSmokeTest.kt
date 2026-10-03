@@ -23,8 +23,12 @@ class ManagerSmokeTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val instrument get() = InstrumentationRegistry.getInstrumentation()
     private val context get() = instrument.targetContext
-    private fun shell(command: String): String = instrument.uiAutomation.executeShellCommand(command).use { descriptor ->
-        android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
+    private fun shell(command: String): String {
+        val descriptors = instrument.uiAutomation.executeShellCommandRwe(command)
+        descriptors[1].close()
+        val output = android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptors[0]).bufferedReader().use { it.readText() }
+        val error = android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptors[2]).bufferedReader().use { it.readText() }
+        return output + error
     }
     @Before fun prepare() {
         assertTrue("Synthetic-data tests are emulator-only",Build.HARDWARE in setOf("ranchu","goldfish") || Build.FINGERPRINT.contains("generic") || Build.FINGERPRINT.contains("sdk_gphone"))
@@ -46,8 +50,13 @@ class ManagerSmokeTest {
         instrument.waitForIdleSync()
         val screenshot = instrument.uiAutomation.takeScreenshot()
         assertNotNull(screenshot)
-        val directory = File(context.getExternalFilesDir(null),"screenshots").apply { mkdirs() }
-        File(directory,"$name.png").outputStream().use { screenshot.compress(Bitmap.CompressFormat.PNG,100,it) }
+        val values = android.content.ContentValues().apply {
+            put(android.provider.MediaStore.Images.Media.DISPLAY_NAME,"$name.png")
+            put(android.provider.MediaStore.Images.Media.MIME_TYPE,"image/png")
+            put(android.provider.MediaStore.Images.Media.RELATIVE_PATH,"Pictures/NotificationGuardSmoke")
+        }
+        val uri = context.contentResolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,values)!!
+        context.contentResolver.openOutputStream(uri)!!.use { screenshot.compress(Bitmap.CompressFormat.PNG,100,it) }
     }
     private fun waitFor(label: String) {
         compose.waitUntil(20000) { compose.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty() }
@@ -75,9 +84,9 @@ class ManagerSmokeTest {
     }
     @Test fun ordinaryShellCallerCannotReadOrMutateBridge() {
         val read = shell("content query --uri content://${GuardProvider.AUTHORITY}/state")
-        assertTrue(read.contains("SecurityException") || read.contains("Module-only"))
+        assertTrue("Unexpected query result: $read",read.contains("SecurityException") || read.contains("Module-only"))
         val write = shell("content call --uri content://${GuardProvider.AUTHORITY} --method request --arg enable")
-        assertTrue(write.contains("SecurityException") || write.contains("Untrusted"))
+        assertTrue("Unexpected command result: $write",write.contains("SecurityException") || write.contains("Untrusted"))
     }
     @Test fun databaseSchemaDoesNotStoreNotificationContent() {
         val protected = context.createDeviceProtectedStorageContext()
